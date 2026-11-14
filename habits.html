@@ -342,4 +342,407 @@
 
       <!-- Consistency Matrix -->
       <div class="card">
-        <div style="display:flex; align-items:center; justify-content:between; border-bottom:1px solid var(--border-
+        <div style="display:flex; align-items:center; justify-content:between; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:10px;">
+          <h3 style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--emerald); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="grid" style="width:14px;height:14px;"></i> 14-Day Consistency Matrix
+          </h3>
+          <span style="font-size:9px; font-family:monospace; color:var(--text-muted);">Recent History</span>
+        </div>
+        <div id="consistency-matrix-grid" class="matrix-grid"></div>
+      </div>
+
+      <!-- Trend Chart -->
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:between; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:10px;">
+          <h3 style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--emerald); display:flex; align-items:center; gap:6px;">
+            <i data-lucide="trending-up" style="width:14px;height:14px;"></i> Completion Trend
+          </h3>
+          <span style="font-size:9px; font-family:monospace; color:var(--text-muted);">Last 14 Days</span>
+        </div>
+        <div style="height:160px; position:relative;">
+          <canvas id="habitTrendChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal -->
+  <div id="habit-editor-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>Customize Protocol Habits</span>
+        <button id="close-habit-editor" class="btn"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+      </div>
+      <div id="habit-editor-list" class="modal-body"></div>
+      <div class="modal-footer">
+        <button id="btn-restore-defaults" class="btn" style="background:transparent; border:none; color:var(--text-muted);">Restore 12 Defaults</button>
+        <button id="btn-close-modal" class="btn btn-primary">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const STORAGE_KEY = 'daily_protocol_habits_v3';
+    const HABITS_DEF_KEY = 'daily_protocol_defs_v3';
+
+    const DEFAULT_HABITS = [
+      { id: 'walk_20', label: 'Walk 20 mins', category: 'Movement & Training', badge: '20 MIN' },
+      { id: 'workout_30', label: 'Workout 30 mins', category: 'Movement & Training', badge: '30 MIN' },
+      { id: 'mobility', label: 'Mobility', category: 'Movement & Training', badge: 'RECOVERY' },
+      { id: 'forearms_5', label: '5 minute forearms', category: 'Movement & Training', badge: '5 MIN' },
+      { id: 'im8', label: 'IM8', category: 'Supplements & Stack', badge: 'DAILY' },
+      { id: 'tudca', label: 'TUDCA', category: 'Supplements & Stack', badge: 'LIVER' },
+      { id: 'magnesium', label: 'Magnesium', category: 'Supplements & Stack', badge: 'MINERAL' },
+      { id: 'perfect_aminos', label: 'Perfect Aminos', category: 'Supplements & Stack', badge: 'EAA' },
+      { id: 'rho_stack', label: 'Rho Stack', category: 'Supplements & Stack', badge: 'STACK' },
+      { id: 'breakfast', label: 'Breakfast', category: 'Nutrition', badge: 'MEAL 1' },
+      { id: 'lunch', label: 'Lunch', category: 'Nutrition', badge: 'MEAL 2' },
+      { id: 'dinner', label: 'Dinner', category: 'Nutrition', badge: 'MEAL 3' }
+    ];
+
+    let HABITS = [];
+    let cachedLogs = {};
+    let selectedDate = '';
+    let trendChartInstance = null;
+
+    function getTodayISO() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    function shiftDateISO(isoStr, delta) {
+      const [y, m, d] = isoStr.split('-').map(Number);
+      const dt = new Date(y, m - 1, d + delta);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    }
+
+    function loadHabits() {
+      try {
+        const raw = localStorage.getItem(HABITS_DEF_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_HABITS));
+    }
+
+    function saveHabits(habits) {
+      HABITS = habits;
+      localStorage.setItem(HABITS_DEF_KEY, JSON.stringify(habits));
+    }
+
+    function loadLogs() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return {};
+    }
+
+    function saveLogs(logs) {
+      cachedLogs = logs;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+    }
+
+    function showToast(msg) {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.innerHTML = `<i data-lucide="check-circle" style="width:16px;height:16px;"></i> <span>${msg}</span>`;
+      c.appendChild(t);
+      lucide.createIcons();
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    function renderAll() {
+      cachedLogs = loadLogs();
+      if (!selectedDate) selectedDate = getTodayISO();
+
+      document.getElementById('date-picker').value = selectedDate;
+      const dayLogs = cachedLogs[selectedDate] || {};
+
+      const container = document.getElementById('habit-checklist-container');
+      container.innerHTML = '';
+
+      const categories = ['Movement & Training', 'Supplements & Stack', 'Nutrition'];
+      const catIcons = { 'Movement & Training': 'flame', 'Supplements & Stack': 'pill', 'Nutrition': 'utensils' };
+
+      let totalDone = 0;
+      const totalCount = HABITS.length;
+
+      categories.forEach(cat => {
+        const catHabits = HABITS.filter(h => h.category === cat);
+        if (catHabits.length === 0) return;
+
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.innerHTML = `
+          <div class="category-header">
+            <i data-lucide="${catIcons[cat]}" style="width:14px;height:14px;color:var(--emerald);"></i>
+            <span>${cat}</span>
+          </div>
+          <div class="habits-grid" id="cat-grid-${cat.replace(/\s+/g, '-')}"></div>
+        `;
+        container.appendChild(section);
+
+        const grid = section.querySelector(`#cat-grid-${cat.replace(/\s+/g, '-')}`);
+        catHabits.forEach(h => {
+          const isChecked = !!dayLogs[h.id];
+          if (isChecked) totalDone++;
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `habit-btn ${isChecked ? 'checked' : ''}`;
+          btn.innerHTML = `
+            <div class="habit-info">
+              <div class="checkbox-box">
+                <i data-lucide="check" style="width:14px;height:14px;stroke-width:3;"></i>
+              </div>
+              <span class="habit-label">${h.label}</span>
+            </div>
+            <span class="habit-badge">${h.badge}</span>
+          `;
+          btn.addEventListener('click', () => {
+            if (!cachedLogs[selectedDate]) cachedLogs[selectedDate] = {};
+            cachedLogs[selectedDate][h.id] = !isChecked;
+            saveLogs(cachedLogs);
+            renderAll();
+          });
+          grid.appendChild(btn);
+        });
+      });
+
+      const pct = totalCount > 0 ? Math.round((totalDone / totalCount) * 100) : 0;
+      const circumference = 2 * Math.PI * 35;
+      const offset = circumference - (pct / 100) * circumference;
+      document.getElementById('daily-progress-ring').style.strokeDashoffset = offset;
+      document.getElementById('daily-pct-text').textContent = `${pct}%`;
+      document.getElementById('daily-fraction-text').innerHTML = `${totalDone} <span style="font-size:13px; font-weight:normal; color:var(--text-muted);">/ ${totalCount}</span>`;
+      document.getElementById('daily-progress-bar').style.width = `${pct}%`;
+
+      const gradeBadge = document.getElementById('daily-grade-badge');
+      if (pct === 100) {
+        gradeBadge.textContent = 'PERFECT';
+        gradeBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+        gradeBadge.style.color = '#34d399';
+      } else if (pct >= 75) {
+        gradeBadge.textContent = 'STRONG';
+        gradeBadge.style.background = 'rgba(6, 182, 212, 0.2)';
+        gradeBadge.style.color = '#22d3ee';
+      } else if (pct > 0) {
+        gradeBadge.textContent = 'IN PROGRESS';
+        gradeBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+        gradeBadge.style.color = '#fbbf24';
+      } else {
+        gradeBadge.textContent = 'PENDING';
+        gradeBadge.style.background = '#1e293b';
+        gradeBadge.style.color = 'var(--text-muted)';
+      }
+
+      checkConsecutiveMisses();
+      renderMatrix();
+      renderTrendChart();
+      lucide.createIcons();
+    }
+
+    function checkConsecutiveMisses() {
+      const banner = document.getElementById('miss-alert-banner');
+      const textEl = document.getElementById('miss-alert-text');
+      const today = getTodayISO();
+      
+      let missedMap = {};
+      HABITS.forEach(h => {
+        let streak = 0;
+        for (let i = 1; i <= 2; i++) {
+          const d = shiftDateISO(today, -i);
+          const rec = cachedLogs[d] || {};
+          if (!rec[h.id]) streak++;
+        }
+        if (streak >= 2) missedMap[h.label] = 2;
+      });
+
+      const missedNames = Object.keys(missedMap);
+      if (missedNames.length > 0) {
+        banner.classList.remove('hidden');
+        textEl.textContent = `You missed ${missedNames.join(', ')} for 2 consecutive days. Get back on protocol!`;
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function renderMatrix() {
+      const grid = document.getElementById('consistency-matrix-grid');
+      grid.innerHTML = '';
+      const today = getTodayISO();
+
+      for (let i = 13; i >= 0; i--) {
+        const d = shiftDateISO(today, -i);
+        const rec = cachedLogs[d] || {};
+        const count = HABITS.filter(h => rec[h.id]).length;
+        const pct = HABITS.length > 0 ? (count / HABITS.length) * 100 : 0;
+
+        let lvl = 'lvl-0';
+        if (pct === 100) lvl = 'lvl-3';
+        else if (pct >= 70) lvl = 'lvl-2';
+        else if (pct > 0) lvl = 'lvl-1';
+
+        const [y, m, day] = d.split('-');
+        const cell = document.createElement('div');
+        cell.className = `matrix-cell ${lvl}`;
+        cell.title = `${d}: ${count}/${HABITS.length} completed`;
+        cell.innerHTML = `
+          <span class="matrix-date">${m}/${day}</span>
+          <span class="matrix-count">${count}</span>
+        `;
+        cell.addEventListener('click', () => {
+          selectedDate = d;
+          renderAll();
+        });
+        grid.appendChild(cell);
+      }
+    }
+
+    function renderTrendChart() {
+      const ctx = document.getElementById('habitTrendChart').getContext('2d');
+      const labels = [];
+      const data = [];
+      const today = getTodayISO();
+
+      for (let i = 13; i >= 0; i--) {
+        const d = shiftDateISO(today, -i);
+        const [y, m, day] = d.split('-');
+        labels.push(`${m}/${day}`);
+        const rec = cachedLogs[d] || {};
+        const count = HABITS.filter(h => rec[h.id]).length;
+        const pct = HABITS.length > 0 ? Math.round((count / HABITS.length) * 100) : 0;
+        data.push(pct);
+      }
+
+      if (trendChartInstance) trendChartInstance.destroy();
+
+      trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 3,
+            pointBackgroundColor: '#10b981'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', font: { size: 9 } } },
+            y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', font: { size: 9 } } }
+          }
+        }
+      });
+    }
+
+    document.getElementById('date-picker').addEventListener('change', (e) => {
+      selectedDate = e.target.value;
+      renderAll();
+    });
+    document.getElementById('btn-prev-day').addEventListener('click', () => {
+      selectedDate = shiftDateISO(selectedDate, -1);
+      renderAll();
+    });
+    document.getElementById('btn-next-day').addEventListener('click', () => {
+      selectedDate = shiftDateISO(selectedDate, 1);
+      renderAll();
+    });
+    document.getElementById('btn-today').addEventListener('click', () => {
+      selectedDate = getTodayISO();
+      renderAll();
+    });
+    document.getElementById('btn-mark-all').addEventListener('click', () => {
+      if (!cachedLogs[selectedDate]) cachedLogs[selectedDate] = {};
+      HABITS.forEach(h => cachedLogs[selectedDate][h.id] = true);
+      saveLogs(cachedLogs);
+      renderAll();
+      showToast('All items completed for this date!');
+    });
+
+    document.getElementById('btn-edit-habits').addEventListener('click', () => {
+      const listEl = document.getElementById('habit-editor-list');
+      listEl.innerHTML = '';
+      HABITS.forEach((h, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; gap:8px; align-items:center; background:var(--bg-base); padding:10px; border-radius:10px; border:1px solid var(--border-color);';
+        row.innerHTML = `
+          <input type="text" value="${h.label}" id="edit-habit-${idx}" style="flex-grow:1; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:6px 10px; color:#fff; font-size:12px; outline:none;">
+          <button type="button" onclick="updateHabitLabel(${idx})" class="btn btn-primary" style="padding:6px 12px;">Save</button>
+        `;
+        listEl.appendChild(row);
+      });
+      document.getElementById('habit-editor-modal').classList.add('active');
+    });
+
+    window.updateHabitLabel = function(idx) {
+      const val = document.getElementById(`edit-habit-${idx}`).value.trim();
+      if (val) {
+        HABITS[idx].label = val;
+        saveHabits(HABITS);
+        renderAll();
+        showToast('Habit updated!');
+      }
+    };
+
+    document.getElementById('close-habit-editor').addEventListener('click', () => {
+      document.getElementById('habit-editor-modal').classList.remove('active');
+    });
+    document.getElementById('btn-close-modal').addEventListener('click', () => {
+      document.getElementById('habit-editor-modal').classList.remove('active');
+    });
+    document.getElementById('btn-restore-defaults').addEventListener('click', () => {
+      saveHabits(JSON.parse(JSON.stringify(DEFAULT_HABITS)));
+      renderAll();
+      showToast('Restored 12 default habits!');
+    });
+
+    document.getElementById('btn-export').addEventListener('click', () => {
+      const data = { habits: HABITS, logs: cachedLogs };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `daily-protocol-backup-${getTodayISO()}.json`;
+      a.click();
+    });
+
+    document.getElementById('input-import').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (parsed.logs) saveLogs(parsed.logs);
+          if (parsed.habits) saveHabits(parsed.habits);
+          renderAll();
+          showToast('Data imported successfully!');
+        } catch (err) {
+          showToast('Invalid backup file.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    window.onload = () => {
+      HABITS = loadHabits();
+      cachedLogs = loadLogs();
+      selectedDate = getTodayISO();
+      renderAll();
+    };
+  </script>
+</body>
+</html>
