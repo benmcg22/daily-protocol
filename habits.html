@@ -1,355 +1,345 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Daily Protocol & Habit Tracker</title>
-  <!-- Tailwind CSS -->
-  <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            darkbg: '#070a12',
-            cardbg: '#0f172a',
-            cardborder: '#1e293b',
-          }
-        }
-      }
-    }
-  </script>
   <!-- Google Font: Inter -->
-  <link rel="stylesheet" href="[https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap)">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
   <!-- Lucide Icons -->
-  <script src="[https://unpkg.com/lucide@latest](https://unpkg.com/lucide@latest)"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Chart.js -->
-  <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    :root {
+      --bg-base: #070a12;
+      --bg-card: #0f172a;
+      --border-color: #1e293b;
+      --emerald: #10b981;
+      --emerald-dark: #065f46;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #070a12;
-      color: #f8fafc;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
       -webkit-tap-highlight-color: transparent;
     }
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1);
+    header {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 40;
     }
-    .progress-ring-circle {
-      transition: stroke-dashoffset 0.5s ease-in-out;
-      transform: rotate(-90deg);
-      transform-origin: 50% 50%;
+    .header-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #10b981, #047857);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 16px; color: #fff;
+      box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+    }
+    .title-area h1 { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    .title-area p { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+    .actions { display: flex; align-items: center; gap: 8px; }
+    .btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #334155; border-color: #475569; }
+    .btn-primary {
+      background: #059669;
+      border-color: #10b981;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #10b981; }
+    
+    main {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 1024px) {
+      main { grid-template-columns: 7fr 5fr; }
+    }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0.0, 0.0, 0.3);
+    }
+    
+    /* Date Nav */
+    .date-nav {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    @media (min-width: 640px) {
+      .date-nav { flex-direction: row; align-items: center; justify-content: space-between; }
+    }
+    .date-controls { display: flex; align-items: center; gap: 10px; }
+    input[type="date"] {
+      background: var(--bg-base);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+    /* Alert */
+    .alert-banner {
+      background: rgba(127, 29, 29, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex; gap: 12px; align-items: flex-start;
+      color: #fca5a5;
+    }
+    .alert-banner.hidden { display: none; }
+    .alert-banner h4 { font-size: 12px; font-weight: 800; text-transform: uppercase; color: #f87171; }
+    .alert-banner p { font-size: 12px; margin-top: 2px; line-height: 1.4; }
+
+    /* Checklist Section */
+    .category-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .category-header {
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .habits-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 640px) {
+      .habits-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .habit-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--bg-base);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .habit-btn:hover { border-color: #475569; }
+    .habit-btn.checked {
+      background: rgba(6, 95, 70, 0.25);
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 10px 15px -3px rgba(6, 95, 70, 0.2);
+    }
+    .habit-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+    .checkbox-box {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 2px solid #475569;
+      background: #020617;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: transparent;
+      transition: all 0.2s;
+    }
+    .habit-btn.checked .checkbox-box {
+      background: var(--emerald);
+      border-color: var(--emerald);
+      color: #fff;
+    }
+    .habit-label { font-size: 12px; font-weight: 700; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .habit-btn.checked .habit-label { color: #fff; }
+    .habit-badge {
+      font-size: 9px;
+      font-family: monospace;
+      padding: 3px 6px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      background: #1e293b;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .habit-btn.checked .habit-badge {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    /* Scorecard */
+    .scorecard { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .ring-container { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+    .ring-container svg { width: 80px; height: 80px; transform: rotate(-90deg); }
+    .ring-bg { stroke: var(--border-color); fill: none; stroke-width: 7; }
+    .ring-fill { stroke: var(--emerald); fill: none; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 219.91; transition: stroke-dashoffset 0.5s ease; }
+    .ring-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; }
+    
+    .progress-bar-container { background: var(--border-color); height: 10px; border-radius: 5px; overflow: hidden; }
+    .progress-bar-fill { background: linear-gradient(90deg, #10b981, #2dd4bf); height: 100%; width: 0%; transition: width 0.5s ease; }
+
+    /* Matrix */
+    .matrix-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 12px; }
+    .matrix-cell {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.05);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .matrix-cell:hover { opacity: 0.8; }
+    .matrix-cell.lvl-0 { background: #1e293b; }
+    .matrix-cell.lvl-1 { background: rgba(217, 119, 6, 0.6); }
+    .matrix-cell.lvl-2 { background: rgba(5, 150, 105, 0.7); }
+    .matrix-cell.lvl-3 { background: #10b981; }
+    .matrix-date { font-size: 9px; font-family: monospace; font-weight: 700; color: #fff; }
+    .matrix-count { font-size: 10px; font-weight: 900; color: #fff; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
+      max-width: 500px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-weight: 800; text-transform: uppercase; font-size: 13px; }
+    .modal-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+    .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border-color); background: var(--bg-base); display: flex; align-items: center; justify-content: space-between; }
+    
+    .toast {
+      position: fixed; bottom: 20px; right: 20px; z-index: 200;
+      background: #059669; color: #fff; padding: 12px 18px; border-radius: 12px;
+      font-size: 12px; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      display: flex; align-items: center; gap: 8px; animation: bounce 0.4s ease;
     }
   </style>
 </head>
-<body class="min-h-screen bg-[#070a12] text-slate-100 flex flex-col selection:bg-emerald-500 selection:text-white">
+<body>
 
-  <!-- Tactical Header -->
-  <header class="border-b border-slate-800 bg-[#0f172a]/90 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 font-black text-lg">
-          DP
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-base font-extrabold tracking-wide uppercase text-white">Daily Protocol</h1>
-            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">12 ITEMS</span>
-          </div>
-          <p class="text-[11px] text-slate-400 font-medium">Non-Negotiable Habit & Supplement Tracker</p>
+  <header>
+    <div class="header-container">
+      <div class="logo-area">
+        <div class="logo-badge">DP</div>
+        <div class="title-area">
+          <h1>Daily Protocol</h1>
+          <p>Non-Negotiable Habit & Supplement Tracker</p>
         </div>
       </div>
-
-      <!-- Actions -->
-      <div class="flex items-center gap-2">
-        <button id="btn-edit-habits" title="Edit Protocol List" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition flex items-center gap-1.5 text-xs font-bold">
-          <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
-          <span class="hidden sm:inline">Customize</span>
-        </button>
-        <button id="btn-export" title="Export Backup" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition" aria-label="Export">
-          <i data-lucide="download" class="w-4 h-4"></i>
-        </button>
-        <label title="Import Backup" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition cursor-pointer" aria-label="Import">
-          <i data-lucide="upload" class="w-4 h-4"></i>
-          <input type="file" id="input-import" accept=".json" class="hidden">
+      <div class="actions">
+        <button id="btn-edit-habits" class="btn"><i data-lucide="sliders" style="width:14px;height:14px;color:#10b981;"></i> Customize</button>
+        <button id="btn-export" class="btn" title="Export JSON"><i data-lucide="download" style="width:14px;height:14px;"></i></button>
+        <label class="btn" style="cursor:pointer;" title="Import JSON">
+          <i data-lucide="upload" style="width:14px;height:14px;"></i>
+          <input type="file" id="input-import" accept=".json" style="display:none;">
         </label>
       </div>
     </div>
   </header>
 
-  <!-- Toast Notification -->
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
+  <div id="toast-container"></div>
 
-  <!-- Main Content Layout -->
-  <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-    <!-- Left Column: Daily Checklist & Date Selector (7 cols) -->
-    <div class="lg:col-span-7 space-y-6">
-
-      <!-- Date Navigation Banner -->
-      <div class="bg-[#0f172a] border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="flex items-center gap-3 w-full sm:w-auto">
-          <button id="btn-prev-day" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Previous Day">
-            <i data-lucide="chevron-left" class="w-4 h-4"></i>
-          </button>
-          <div class="flex-grow sm:flex-grow-0">
-            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Logging Date</label>
-            <input type="date" id="date-picker" class="w-full sm:w-auto bg-[#070a12] border border-emerald-500/40 focus:border-emerald-500 rounded-xl px-3 py-1.5 text-sm font-semibold text-white focus:outline-none">
+  <main>
+    <!-- Left Column -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Date Banner -->
+      <div class="card date-nav">
+        <div class="date-controls">
+          <button id="btn-prev-day" class="btn"><i data-lucide="chevron-left" style="width:16px;height:16px;"></i></button>
+          <div>
+            <span style="display:block; font-size:9px; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;">Logging Date</span>
+            <input type="date" id="date-picker">
           </div>
-          <button id="btn-next-day" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition" aria-label="Next Day">
-            <i data-lucide="chevron-right" class="w-4 h-4"></i>
-          </button>
+          <button id="btn-next-day" class="btn"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button>
         </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button id="btn-today" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition">Today</button>
-          <button id="btn-mark-all" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-extrabold uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5">
-            <i data-lucide="check-check" class="w-4 h-4"></i> Complete All
-          </button>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-today" class="btn">Today</button>
+          <button id="btn-mark-all" class="btn btn-primary"><i data-lucide="check-check" style="width:14px;height:14px;"></i> Complete All</button>
         </div>
       </div>
 
-      <!-- Consecutive Miss Alert Banner (Hidden by default) -->
-      <div id="miss-alert-banner" class="hidden bg-rose-950/40 border border-rose-500/50 rounded-2xl p-4 text-rose-200 shadow-xl flex items-start gap-3">
-        <div class="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0">
-          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-        </div>
+      <!-- Warning Banner -->
+      <div id="miss-alert-banner" class="alert-banner hidden">
+        <i data-lucide="alert-triangle" style="width:20px;height:20px;flex-shrink:0;"></i>
         <div>
-          <h4 class="text-xs font-extrabold uppercase tracking-wider text-rose-300">Protocol Breach Warning</h4>
-          <p id="miss-alert-text" class="text-xs text-rose-200/90 mt-0.5 leading-relaxed"></p>
+          <h4>Protocol Breach Warning</h4>
+          <p id="miss-alert-text"></p>
         </div>
       </div>
 
-      <!-- Habit Checklist Categorized Container -->
-      <div id="habit-checklist-container" class="space-y-6">
-        <!-- Rendered dynamically -->
-      </div>
-
+      <!-- Checklist Container -->
+      <div id="habit-checklist-container"></div>
     </div>
 
-    <!-- Right Column: Progress Telemetry & History (5 cols) -->
-    <div class="lg:col-span-5 space-y-6">
-
-      <!-- Progress Scorecard -->
-      <div class="bg-[#0f172a] border border-slate-800 rounded-2xl p-5 shadow-xl space-y-5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <div class="relative w-20 h-20 shrink-0">
-              <svg class="w-20 h-20" viewBox="0 0 84 84">
-                <circle cx="42" cy="42" r="35" stroke="#1e293b" stroke-width="7" fill="transparent" />
-                <circle id="daily-progress-ring" class="progress-ring-circle" cx="42" cy="42" r="35" stroke="#10b981" stroke-width="7" stroke-linecap="round" fill="transparent" stroke-dasharray="219.91" stroke-dashoffset="219.91" />
+    <!-- Right Column -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Scorecard -->
+      <div class="card">
+        <div class="scorecard">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="ring-container">
+              <svg viewBox="0 0 84 84">
+                <circle class="ring-bg" cx="42" cy="42" r="35"></circle>
+                <circle id="daily-progress-ring" class="ring-fill" cx="42" cy="42" r="35" stroke-dashoffset="219.91"></circle>
               </svg>
-              <div class="absolute inset-0 flex flex-col items-center justify-center">
-                <span id="daily-pct-text" class="text-base font-black text-white">0%</span>
-              </div>
+              <div id="daily-pct-text" class="ring-text">0%</div>
             </div>
             <div>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Daily Execution</div>
-              <div id="daily-fraction-text" class="text-2xl font-black text-white mt-0.5">0 <span class="text-sm font-normal text-slate-400">/ 12</span></div>
-              <div id="daily-grade-badge" class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-slate-800 text-slate-400">
-                Pending
-              </div>
+              <div style="font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted);">Daily Execution</div>
+              <div id="daily-fraction-text" style="font-size:24px; font-weight:900; margin-top:2px;">0 <span style="font-size:13px; font-weight:normal; color:var(--text-muted);">/ 12</span></div>
+              <div id="daily-grade-badge" style="margin-top:4px; display:inline-block; padding:3px 8px; border-radius:20px; font-size:9px; font-weight:800; text-transform:uppercase; background:#1e293b; color:var(--text-muted);">Pending</div>
             </div>
           </div>
         </div>
-
-        <!-- Linear Progress Bar -->
-        <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
-          <div id="daily-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 transition-all duration-500"></div>
+        <div class="progress-bar-container">
+          <div id="daily-progress-bar" class="progress-bar-fill"></div>
         </div>
       </div>
 
-      <!-- 14-Day Consistency Matrix -->
-      <div class="bg-[#0f172a] border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-            <i data-lucide="grid" class="w-4 h-4"></i> 14-Day Consistency Matrix
-          </h3>
-          <span class="text-[10px] font-mono text-slate-400">Recent History</span>
-        </div>
-        <div id="consistency-matrix-grid" class="grid grid-cols-7 gap-2 pt-1">
-          <!-- Rendered dynamically -->
-        </div>
-      </div>
-
-      <!-- Trend Chart -->
-      <div class="bg-[#0f172a] border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-            <i data-lucide="trending-up" class="w-4 h-4"></i> Completion Trend
-          </h3>
-          <span class="text-[10px] font-mono text-slate-400">Last 14 Days</span>
-        </div>
-        <div class="h-44 w-full relative">
-          <canvas id="habitTrendChart"></canvas>
-        </div>
-      </div>
-
-    </div>
-
-  </main>
-
-  <!-- Customization Modal -->
-  <div id="habit-editor-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-[#0f172a] border border-slate-800 rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-        <h3 class="text-sm font-extrabold uppercase tracking-wide text-white">Customize Protocol Habits</h3>
-        <button id="close-habit-editor" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-      </div>
-      <div id="habit-editor-list" class="p-5 overflow-y-auto space-y-3 flex-grow">
-        <!-- Rendered dynamically -->
-      </div>
-      <div class="p-4 border-t border-slate-800 bg-[#070a12] flex justify-between items-center">
-        <button id="btn-restore-defaults" class="text-xs font-bold text-slate-400 hover:text-emerald-400 transition">Restore 12 Defaults</button>
-        <button id="btn-close-modal" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition">Done</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Script Logic -->
-  <script>
-    lucide.createIcons();
-
-    const STORAGE_KEY = 'daily_protocol_habits_v2';
-    const HABITS_DEF_KEY = 'daily_protocol_defs_v2';
-
-    const DEFAULT_HABITS = [
-      { id: 'walk_20', label: 'Walk 20 mins', category: 'Movement & Training', badge: '20 MIN' },
-      { id: 'workout_30', label: 'Workout 30 mins', category: 'Movement & Training', badge: '30 MIN' },
-      { id: 'mobility', label: 'Mobility', category: 'Movement & Training', badge: 'RECOVERY' },
-      { id: 'forearms_5', label: '5 minute forearms', category: 'Movement & Training', badge: '5 MIN' },
-      { id: 'im8', label: 'IM8', category: 'Supplements & Stack', badge: 'DAILY' },
-      { id: 'tudca', label: 'TUDCA', category: 'Supplements & Stack', badge: 'LIVER' },
-      { id: 'magnesium', label: 'Magnesium', category: 'Supplements & Stack', badge: 'MINERAL' },
-      { id: 'perfect_aminos', label: 'Perfect Aminos', category: 'Supplements & Stack', badge: 'EAA' },
-      { id: 'rho_stack', label: 'Rho Stack', category: 'Supplements & Stack', badge: 'STACK' },
-      { id: 'breakfast', label: 'Breakfast', category: 'Nutrition', badge: 'MEAL 1' },
-      { id: 'lunch', label: 'Lunch', category: 'Nutrition', badge: 'MEAL 2' },
-      { id: 'dinner', label: 'Dinner', category: 'Nutrition', badge: 'MEAL 3' }
-    ];
-
-    let HABITS = [];
-    let cachedLogs = {};
-    let selectedDate = '';
-    let trendChartInstance = null;
-
-    function getTodayISO() {
-      const now = new Date();
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    }
-
-    function shiftDateISO(isoStr, delta) {
-      const [y, m, d] = isoStr.split('-').map(Number);
-      const dt = new Date(y, m - 1, d + delta);
-      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-    }
-
-    function loadHabits() {
-      try {
-        const raw = localStorage.getItem(HABITS_DEF_KEY);
-        if (raw) return JSON.parse(raw);
-      } catch (e) {}
-      return JSON.parse(JSON.stringify(DEFAULT_HABITS));
-    }
-
-    function saveHabits(habits) {
-      HABITS = habits;
-      localStorage.setItem(HABITS_DEF_KEY, JSON.stringify(habits));
-    }
-
-    function loadLogs() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) return JSON.parse(raw);
-      } catch (e) {}
-      return {};
-    }
-
-    function saveLogs(logs) {
-      cachedLogs = logs;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-    }
-
-    function showToast(msg) {
-      const c = document.getElementById('toast-container');
-      const t = document.createElement('div');
-      t.className = 'bg-emerald-600 text-white px-4 py-3 rounded-xl text-xs font-bold shadow-xl border border-emerald-500 flex items-center gap-2 animate-bounce';
-      t.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> <span>${msg}</span>`;
-      c.appendChild(t);
-      lucide.createIcons();
-      setTimeout(() => t.remove(), 3000);
-    }
-
-    function renderAll() {
-      cachedLogs = loadLogs();
-      if (!selectedDate) selectedDate = getTodayISO();
-
-      document.getElementById('date-picker').value = selectedDate;
-      const dayLogs = cachedLogs[selectedDate] || {};
-
-      const container = document.getElementById('habit-checklist-container');
-      container.innerHTML = '';
-
-      const categories = ['Movement & Training', 'Supplements & Stack', 'Nutrition'];
-      const catIcons = { 'Movement & Training': 'flame', 'Supplements & Stack': 'pill', 'Nutrition': 'utensils' };
-      const catColors = { 'Movement & Training': 'text-emerald-400', 'Supplements & Stack': 'text-cyan-400', 'Nutrition': 'text-amber-400' };
-
-      let totalDone = 0;
-      const totalCount = HABITS.length;
-
-      categories.forEach(cat => {
-        const catHabits = HABITS.filter(h => h.category === cat);
-        if (catHabits.length === 0) return;
-
-        const section = document.createElement('div');
-        section.className = 'bg-[#0f172a] border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3';
-        section.innerHTML = `
-          <div class="flex items-center gap-2 border-b border-slate-800 pb-2.5">
-            <i data-lucide="${catIcons[cat]}" class="w-4 h-4 ${catColors[cat]}"></i>
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-200">${cat}</h3>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5" id="cat-grid-${cat.replace(/\s+/g, '-')}"></div>
-        `;
-        container.appendChild(section);
-
-        const grid = section.querySelector(`#cat-grid-${cat.replace(/\s+/g, '-')}`);
-        catHabits.forEach(h => {
-          const isChecked = !!dayLogs[h.id];
-          if (isChecked) totalDone++;
-
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = `w-full text-left p-3 rounded-xl border transition flex items-center justify-between gap-3 ${isChecked ? 'bg-emerald-950/30 border-emerald-500/50 text-white shadow-lg shadow-emerald-950/20' : 'bg-[#070a12] border-slate-800/80 hover:border-slate-700 text-slate-300'}`;
-          btn.innerHTML = `
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div class="w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition ${isChecked ? 'bg-emerald-500 border-emerald-400 text-white' : 'border-slate-700 bg-slate-900'}" style="color:${isChecked?'#fff':'transparent'}">
-                <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>
-              </div>
-              <span class="text-xs font-bold truncate ${isChecked ? 'text-white' : 'text-slate-300'}">${h.label}</span>
-            </div>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded uppercase tracking-wider ${isChecked ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}">${h.badge}</span>
-          `;
-          btn.addEventListener('click', () => {
-            if (!cachedLogs[selectedDate]) cachedLogs[selectedDate] = {};
-            cachedLogs[selectedDate][h.id] = !isChecked;
-            saveLogs(cachedLogs);
-            renderAll();
-          });
-          grid.appendChild(btn);
-        });
-      });
-
-      const pct = Math.round((totalDone / totalCount) * 100);
-      const circumference = 2 * Math.PI * 35;
-      const offset = circumference - (pct / 100) * circumference;
-      document.getElementById('daily-progress-ring').style.strokeDashoffset = offset;
-      document.getElementById('daily-pct-text').textContent = `${pct}%`;
-      document.getElementById('daily-fraction-text').innerHTML = `${totalDone} <span class="text-sm font-normal text-slate-400">/ ${totalCount}</span>`;
-      document.getElementById('daily-progress-bar').style.width = `${pct}%`;
-
-      const gradeBadge = document.getElementById('daily-grade-badge');
-      if (pct === 100) {
-        gradeBadge.textContent = 'PERFECT';
-        gradeBadge.className = 'inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/4
+      <!-- Consistency Matrix -->
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:between; border-bottom:1px solid var(--border-
