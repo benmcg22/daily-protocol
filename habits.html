@@ -2,640 +2,505 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Daily Protocol & Habit Tracker</title>
-  <!-- Google Font: Inter -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily protocol and habit tracker</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap">
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Pinned versions so a CDN update can't break the page. The app still works if these fail to load. -->
+  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg-base: #070a12;
-      --bg-card: #0f172a;
-      --border-color: #1e293b;
-      --emerald: #10b981;
-      --emerald-dark: #065f46;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-base: #070a12; --bg-card: #0f172a; --border-color: #1e293b;
+      --emerald: #10b981; --text-main: #f8fafc; --text-muted: #94a3b8; --red: #f87171;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg-base);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      -webkit-tap-highlight-color: transparent;
+      background: var(--bg-base); color: var(--text-main); min-height: 100vh;
+      display: flex; flex-direction: column; -webkit-tap-highlight-color: transparent;
     }
-
     .mono { font-family: 'JetBrains Mono', monospace; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #34d399; outline-offset: 2px; }
 
-    /* Sticky Tactical Header */
     header {
-      background: rgba(15, 23, 42, 0.92);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-color);
-      position: sticky;
-      top: 0;
-      z-index: 40;
+      background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 40;
     }
-
     .header-container {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+      max-width: 1120px; margin: 0 auto; padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-
     .logo-area { display: flex; align-items: center; gap: 12px; }
-
     .logo-badge {
-      width: 40px; height: 40px;
-      background: linear-gradient(135deg, #10b981, #047857);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 900; font-size: 16px; color: #fff;
-      box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.25);
-      flex-shrink: 0;
+      width: 40px; height: 40px; background: linear-gradient(135deg, #10b981, #047857); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #fff; flex-shrink: 0;
     }
-
-    .title-area h1 {
-      font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
-    }
-
-    .title-area p {
-      font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px;
-    }
-
+    .title-area h1 { font-size: 16px; font-weight: 800; letter-spacing: 0.02em; }
+    .title-area p { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
     .actions { display: flex; align-items: center; gap: 8px; }
 
     .btn {
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: var(--text-main);
-      padding: 8px 12px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      transition: all 0.18s ease;
+      background: #1e293b; border: 1px solid #334155; color: var(--text-main); padding: 8px 12px; border-radius: 10px;
+      font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center;
+      justify-content: center; gap: 6px; transition: all 0.18s ease; font-family: inherit;
     }
-
     .btn:hover { background: #334155; border-color: #475569; }
-
-    .btn-primary {
-      background: #059669;
-      border-color: #10b981;
-      color: #fff;
-    }
-
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-primary { background: #059669; border-color: #10b981; color: #fff; }
     .btn-primary:hover { background: #10b981; }
+    .btn-danger { background: transparent; border-color: rgba(239,68,68,0.5); color: var(--red); }
+    .btn-danger:hover { background: rgba(239,68,68,0.15); }
 
-    /* Responsive Two-Column Grid */
     main {
-      max-width: 1120px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 20px 18px 44px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
+      max-width: 1120px; width: 100%; margin: 0 auto; padding: 20px 18px 44px;
+      display: grid; grid-template-columns: 1fr; gap: 20px;
     }
-
-    @media (min-width: 980px) {
-      main { grid-template-columns: 7fr 5fr; }
-    }
-
-    .col-stack { display: flex; flex-direction: column; gap: 18px; }
+    @media (min-width: 980px) { main { grid-template-columns: 7fr 5fr; align-items: start; } }
+    .col-stack { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 
     .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 18px 25px -8px rgba(0, 0, 0, 0.38);
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px;
+      box-shadow: 0 18px 25px -8px rgba(0,0,0,0.38);
     }
-
-    /* Date Navigation Bar */
-    .date-nav {
-      display: flex; flex-direction: column; gap: 12px;
-    }
-
-    @media (min-width: 600px) {
-      .date-nav { flex-direction: row; align-items: center; justify-content: space-between; }
-    }
-
+    .date-nav { display: flex; flex-direction: column; gap: 12px; }
+    @media (min-width: 600px) { .date-nav { flex-direction: row; align-items: center; justify-content: space-between; } }
     .date-controls { display: flex; align-items: center; gap: 8px; }
-
+    .field-label { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 2px; }
     input[type="date"] {
-      background: var(--bg-base);
-      border: 1px solid rgba(16, 185, 129, 0.45);
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      outline: none;
+      background: var(--bg-base); border: 1px solid rgba(16,185,129,0.45); color: #fff; padding: 8px 12px;
+      border-radius: 10px; font-size: 13px; font-weight: 600; font-family: inherit;
     }
-
     input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
-    /* Protocol Breach Alert Banner */
+    .past-note { font-size: 12px; color: #fbbf24; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; padding: 10px 14px; }
+    .hidden { display: none !important; }
+
     .alert-banner {
-      background: rgba(127, 29, 29, 0.32);
-      border: 1px solid rgba(239, 68, 68, 0.48);
-      border-radius: 16px;
-      padding: 15px 16px;
-      display: flex; gap: 12px; align-items: flex-start;
-      color: #fca5a5;
+      background: rgba(127,29,29,0.32); border: 1px solid rgba(239,68,68,0.48); border-radius: 16px;
+      padding: 15px 16px; display: flex; gap: 12px; align-items: flex-start; color: #fca5a5;
     }
+    .alert-banner h4 { font-size: 13px; font-weight: 800; color: var(--red); }
+    .alert-banner ul { margin: 6px 0 0 16px; font-size: 13px; line-height: 1.55; }
+    .alert-banner li strong { color: #fecaca; }
 
-    .alert-banner.hidden { display: none; }
-    .alert-banner h4 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #f87171; }
-    .alert-banner p { font-size: 12px; margin-top: 3px; line-height: 1.45; }
-
-    /* Category Cards & Checklist Buttons */
-    .category-section {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 18px;
-    }
-
+    .category-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; }
     .category-header {
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 10px;
-      margin-bottom: 14px;
-      font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+      display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px; margin-bottom: 14px; font-size: 13px; font-weight: 800;
     }
-
     .category-title-left { display: flex; align-items: center; gap: 8px; }
-
-    .habits-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-
-    @media (min-width: 580px) {
-      .habits-grid { grid-template-columns: repeat(2, 1fr); }
-    }
+    .habits-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 580px) { .habits-grid { grid-template-columns: repeat(2, 1fr); } }
 
     .habit-btn {
-      width: 100%;
-      text-align: left;
-      background: var(--bg-base);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      cursor: pointer;
-      transition: all 0.18s ease;
+      width: 100%; text-align: left; background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 12px;
+      padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      cursor: pointer; transition: all 0.18s ease; color: inherit; font-family: inherit;
     }
-
     .habit-btn:hover { border-color: #475569; }
-
-    .habit-btn.checked {
-      background: rgba(6, 95, 70, 0.28);
-      border-color: rgba(16, 185, 129, 0.55);
-      box-shadow: 0 8px 16px -4px rgba(6, 95, 70, 0.25);
-    }
-
+    .habit-btn.checked { background: rgba(6,95,70,0.28); border-color: rgba(16,185,129,0.55); }
+    .habit-btn.missing { border-color: rgba(239,68,68,0.55); }
     .habit-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
-
     .checkbox-box {
-      width: 22px; height: 22px;
-      border-radius: 6px;
-      border: 2px solid #475569;
-      background: #020617;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      color: transparent;
-      transition: all 0.18s ease;
+      width: 22px; height: 22px; border-radius: 6px; border: 2px solid #475569; background: #020617;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: transparent; transition: all 0.18s ease;
     }
-
-    .habit-btn.checked .checkbox-box {
-      background: var(--emerald);
-      border-color: var(--emerald);
-      color: #fff;
-    }
-
-    .habit-label {
-      font-size: 13px; font-weight: 700; color: #cbd5e1;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
+    .habit-btn.checked .checkbox-box { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+    .habit-label { font-size: 13px; font-weight: 700; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .habit-btn.checked .habit-label { color: #fff; }
-
     .habit-badge {
-      font-size: 9px;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      padding: 3px 6px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      background: #1e293b;
-      color: var(--text-muted);
-      flex-shrink: 0;
+      font-size: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 700; padding: 3px 6px; border-radius: 6px;
+      background: #1e293b; color: var(--text-muted); flex-shrink: 0; white-space: nowrap;
     }
+    .habit-btn.checked .habit-badge { background: rgba(16,185,129,0.22); color: #34d399; }
+    .habit-btn.missing .habit-badge { background: rgba(239,68,68,0.2); color: var(--red); }
 
-    .habit-btn.checked .habit-badge {
-      background: rgba(16, 185, 129, 0.22);
-      color: #34d399;
-    }
-
-    /* Scorecard & SVG Ring */
-    .scorecard { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .scorecard { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
     .ring-container { position: relative; width: 82px; height: 82px; flex-shrink: 0; }
     .ring-container svg { width: 82px; height: 82px; transform: rotate(-90deg); }
     .ring-bg { stroke: var(--border-color); fill: none; stroke-width: 7; }
     .ring-fill { stroke: var(--emerald); fill: none; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 219.91; transition: stroke-dashoffset 0.45s ease; }
     .ring-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; }
-    
     .progress-bar-container { background: var(--border-color); height: 10px; border-radius: 999px; overflow: hidden; }
     .progress-bar-fill { background: linear-gradient(90deg, #10b981, #2dd4bf); height: 100%; width: 0%; transition: width 0.45s ease; }
 
-    /* 14-Day Consistency Matrix */
-    .section-head {
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 10px; margin-bottom: 12px;
-    }
+    .section-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 12px; gap: 8px; }
+    .section-head h3 { font-size: 13px; font-weight: 800; color: var(--emerald); display: flex; align-items: center; gap: 6px; }
+    .hint { font-size: 10px; color: var(--text-muted); }
 
     .matrix-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-
+    .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; text-align: center; font-size: 10px; color: var(--text-muted); font-weight: 700; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
     .matrix-cell {
-      aspect-ratio: 1;
-      border-radius: 10px;
-      background: #1e293b;
-      border: 1px solid rgba(255,255,255,0.06);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      aspect-ratio: 1; border-radius: 10px; background: #1e293b; border: 1px solid rgba(255,255,255,0.06); color: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease; font-family: inherit; padding: 0;
     }
-
     .matrix-cell:hover { transform: scale(1.05); border-color: #fff; }
     .matrix-cell.active-day { outline: 2px solid #fff; outline-offset: 2px; }
+    .matrix-cell.today { border-color: #34d399; }
     .matrix-cell.lvl-0 { background: #1e293b; }
-    .matrix-cell.lvl-1 { background: rgba(217, 119, 6, 0.6); }
-    .matrix-cell.lvl-2 { background: rgba(5, 150, 105, 0.72); }
+    .matrix-cell.lvl-1 { background: rgba(217,119,6,0.6); }
+    .matrix-cell.lvl-2 { background: rgba(5,150,105,0.72); }
     .matrix-cell.lvl-3 { background: #10b981; }
-    .matrix-date { font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #fff; }
-    .matrix-count { font-size: 11px; font-weight: 900; color: #fff; }
+    .matrix-cell.missed { background: rgba(127,29,29,0.45); border-color: rgba(239,68,68,0.7); }
+    .matrix-cell.future { opacity: 0.25; cursor: default; }
+    .matrix-date { font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+    .matrix-count { font-size: 11px; font-weight: 900; }
+    .cal-cell { font-size: 11px; font-weight: 700; aspect-ratio: 1; }
+    .cal-empty { aspect-ratio: 1; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; font-size: 10px; color: var(--text-muted); }
+    .legend span::before { content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; background: var(--c); }
 
-    /* Modal */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(4px);
-      display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px;
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat { background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; }
+    .stat b { display: block; font-size: 22px; font-weight: 900; margin-top: 2px; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
     .modal-overlay.active { display: flex; }
-    .modal-content {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;
-      max-width: 500px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
-    }
-    .modal-header {
-      padding: 16px 20px; border-bottom: 1px solid var(--border-color);
-      display: flex; align-items: center; justify-content: space-between;
-      font-weight: 800; text-transform: uppercase; font-size: 13px;
-    }
+    .modal-content { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; max-width: 640px; width: 100%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-weight: 800; font-size: 14px; }
     .modal-body { padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
-    .modal-footer {
-      padding: 14px 20px; border-top: 1px solid var(--border-color); background: var(--bg-base);
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border-color); background: var(--bg-base); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    .editor-row { display: grid; grid-template-columns: 1fr 1fr 90px auto; gap: 8px; align-items: center; background: var(--bg-base); padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); }
+    @media (max-width: 560px) { .editor-row { grid-template-columns: 1fr 1fr; } }
+    .editor-row input { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 7px 10px; color: #fff; font-size: 12px; font-family: inherit; min-width: 0; }
 
-    /* Toast */
-    .toast {
-      position: fixed; bottom: 20px; right: 20px; z-index: 200;
-      background: #059669; color: #fff; padding: 12px 18px; border-radius: 12px;
-      font-size: 12px; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      display: flex; align-items: center; gap: 8px;
-    }
+    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: #059669; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 12px; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 8px; }
+    .toast.error { background: #b91c1c; }
   </style>
 </head>
 <body>
 
-  <!-- Tactical Sticky Header -->
   <header>
     <div class="header-container">
       <div class="logo-area">
         <div class="logo-badge">DP</div>
         <div class="title-area">
-          <h1>Daily Protocol</h1>
-          <p>Non-Negotiable Habit &amp; Supplement Tracker</p>
+          <h1>Daily protocol</h1>
+          <p>Habit and supplement tracker</p>
         </div>
       </div>
       <div class="actions">
-        <button id="btn-edit-habits" class="btn">
-          <i data-lucide="sliders" style="width:14px;height:14px;color:#10b981;"></i> Customize
-        </button>
-        <button id="btn-export" class="btn" title="Export JSON">
-          <i data-lucide="download" style="width:14px;height:14px;"></i>
-        </button>
-        <label class="btn" style="cursor:pointer;" title="Import JSON">
+        <button id="btn-edit-habits" class="btn"><i data-lucide="sliders" style="width:14px;height:14px;color:#10b981;"></i> Customize</button>
+        <button id="btn-export" class="btn" title="Export backup (JSON)" aria-label="Export backup"><i data-lucide="download" style="width:14px;height:14px;"></i></button>
+        <label class="btn" style="cursor:pointer;" title="Import backup (JSON)">
           <i data-lucide="upload" style="width:14px;height:14px;"></i>
-          <input type="file" id="input-import" accept=".json" style="display:none;">
+          <span class="sr-only" style="position:absolute;left:-9999px;">Import backup</span>
+          <input type="file" id="input-import" accept=".json,application/json" style="display:none;">
         </label>
       </div>
     </div>
   </header>
 
-  <div id="toast-container"></div>
+  <div id="toast-container" aria-live="polite"></div>
 
   <main>
-    <!-- Left Column: Date Navigation, Breach Alert, 12-Item Checklist -->
     <div class="col-stack">
       <div class="card date-nav">
         <div class="date-controls">
-          <button id="btn-prev-day" class="btn" title="Previous Day">
-            <i data-lucide="chevron-left" style="width:16px;height:16px;"></i>
-          </button>
+          <button id="btn-prev-day" class="btn" title="Previous day" aria-label="Previous day"><i data-lucide="chevron-left" style="width:16px;height:16px;"></i></button>
           <div>
-            <span style="display:block; font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:2px;">Logging Date</span>
-            <input type="date" id="date-picker">
+            <span class="field-label">Logging date</span>
+            <input type="date" id="date-picker" aria-label="Logging date">
           </div>
-          <button id="btn-next-day" class="btn" title="Next Day">
-            <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
-          </button>
+          <button id="btn-next-day" class="btn" title="Next day" aria-label="Next day"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></button>
         </div>
-        <div style="display: flex; gap: 8px;">
+        <div style="display:flex; gap:8px;">
           <button id="btn-today" class="btn">Today</button>
-          <button id="btn-mark-all" class="btn btn-primary">
-            <i data-lucide="check-check" style="width:14px;height:14px;"></i> Complete All
-          </button>
+          <button id="btn-mark-all" class="btn btn-primary"><i data-lucide="check-check" style="width:14px;height:14px;"></i> Complete all</button>
         </div>
       </div>
 
-      <!-- 2-Consecutive-Day Miss Breach Warning -->
-      <div id="miss-alert-banner" class="alert-banner hidden">
+      <div id="past-note" class="past-note hidden"></div>
+
+      <div id="miss-alert-banner" class="alert-banner hidden" role="alert">
         <i data-lucide="alert-triangle" style="width:20px;height:20px;flex-shrink:0;margin-top:1px;"></i>
         <div>
-          <h4>Protocol Breach Warning</h4>
-          <p id="miss-alert-text"></p>
+          <h4 id="miss-alert-title"></h4>
+          <ul id="miss-alert-list"></ul>
         </div>
       </div>
 
-      <!-- Categorized Checklist Container -->
       <div id="habit-checklist-container" class="col-stack"></div>
     </div>
 
-    <!-- Right Column: Execution Scorecard, 14-Day Matrix, Completion Trend Chart -->
     <div class="col-stack">
       <div class="card">
         <div class="scorecard">
-          <div style="display: flex; align-items: center; gap: 16px;">
-            <div class="ring-container">
-              <svg viewBox="0 0 84 84">
-                <circle class="ring-bg" cx="42" cy="42" r="35"></circle>
-                <circle id="daily-progress-ring" class="ring-fill" cx="42" cy="42" r="35" stroke-dashoffset="219.91"></circle>
-              </svg>
-              <div id="daily-pct-text" class="ring-text mono">0%</div>
-            </div>
-            <div>
-              <div style="font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted);">Daily Execution</div>
-              <div id="daily-fraction-text" class="mono" style="font-size:24px; font-weight:900; margin-top:2px;">0 <span style="font-size:13px; font-weight:normal; color:var(--text-muted);">/ 12</span></div>
-              <div id="daily-grade-badge" style="margin-top:4px; display:inline-block; padding:3px 9px; border-radius:20px; font-size:9px; font-weight:800; text-transform:uppercase; background:#1e293b; color:var(--text-muted);">Pending</div>
-            </div>
+          <div class="ring-container">
+            <svg viewBox="0 0 84 84" aria-hidden="true">
+              <circle class="ring-bg" cx="42" cy="42" r="35"></circle>
+              <circle id="daily-progress-ring" class="ring-fill" cx="42" cy="42" r="35" stroke-dashoffset="219.91"></circle>
+            </svg>
+            <div id="daily-pct-text" class="ring-text mono">0%</div>
           </div>
-          <button id="btn-reset-demo" class="btn" style="font-size:11px; padding:6px 10px;" title="Reload sample 14-day history">Demo Data</button>
+          <div>
+            <div class="field-label" id="score-date-label">Daily execution</div>
+            <div id="daily-fraction-text" class="mono" style="font-size:24px; font-weight:900; margin-top:2px;"></div>
+            <div id="daily-grade-badge" style="margin-top:4px; display:inline-block; padding:3px 9px; border-radius:20px; font-size:10px; font-weight:800;">Pending</div>
+          </div>
         </div>
-        <div class="progress-bar-container">
-          <div id="daily-progress-bar" class="progress-bar-fill"></div>
-        </div>
+        <div class="progress-bar-container"><div id="daily-progress-bar" class="progress-bar-fill"></div></div>
       </div>
 
-      <!-- 14-Day Consistency Matrix -->
       <div class="card">
         <div class="section-head">
-          <h3 style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--emerald); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="grid" style="width:14px;height:14px;"></i> 14-Day Consistency Matrix
-          </h3>
-          <span class="mono" style="font-size:10px; color:var(--text-muted);">Tap day to view</span>
+          <h3><i data-lucide="grid" style="width:14px;height:14px;"></i> Last 14 days</h3>
+          <span class="hint mono">Tap a day to view or edit</span>
         </div>
         <div id="consistency-matrix-grid" class="matrix-grid"></div>
+        <div class="legend">
+          <span style="--c:#10b981">All done</span>
+          <span style="--c:rgba(5,150,105,0.72)">70%+</span>
+          <span style="--c:rgba(217,119,6,0.6)">Some</span>
+          <span style="--c:rgba(127,29,29,0.8)">Missed day</span>
+        </div>
       </div>
 
-      <!-- 14-Day Completion Trend Chart -->
       <div class="card">
         <div class="section-head">
-          <h3 style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--emerald); display:flex; align-items:center; gap:6px;">
-            <i data-lucide="trending-up" style="width:14px;height:14px;"></i> Completion Trend
-          </h3>
-          <span class="mono" style="font-size:10px; color:var(--text-muted);">Last 14 Days</span>
+          <h3><i data-lucide="trending-up" style="width:14px;height:14px;"></i> Completion trend</h3>
+          <span class="hint mono">Last 14 days</span>
         </div>
-        <div style="height:165px; position:relative;">
-          <canvas id="habitTrendChart"></canvas>
+        <div style="height:165px; position:relative;"><canvas id="habitTrendChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h3><i data-lucide="calendar" style="width:14px;height:14px;"></i> History</h3>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button id="cal-prev" class="btn" style="padding:4px 8px;" aria-label="Previous month"><i data-lucide="chevron-left" style="width:14px;height:14px;"></i></button>
+            <span id="cal-title" class="mono" style="font-size:12px; min-width:110px; text-align:center;"></span>
+            <button id="cal-next" class="btn" style="padding:4px 8px;" aria-label="Next month"><i data-lucide="chevron-right" style="width:14px;height:14px;"></i></button>
+          </div>
         </div>
+        <div class="cal-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+        <div id="cal-grid" class="cal-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-head">
+          <h3><i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i> All-time stats</h3>
+          <span id="stats-since" class="hint mono"></span>
+        </div>
+        <div id="stats-grid" class="stats-grid"></div>
       </div>
     </div>
   </main>
 
-  <!-- Customize Protocol Modal -->
-  <div id="habit-editor-modal" class="modal-overlay">
+  <div id="habit-editor-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Customize habits">
     <div class="modal-content">
       <div class="modal-header">
-        <span>Customize Protocol Habits</span>
-        <button id="close-habit-editor" class="btn"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+        <span>Customize habits</span>
+        <button id="close-habit-editor" class="btn" aria-label="Close"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
       </div>
+      <div class="hint" style="padding:12px 20px 0;">Changes save automatically. Removing a habit hides it but keeps its past entries in your backup.</div>
       <div id="habit-editor-list" class="modal-body"></div>
+      <datalist id="category-options"></datalist>
       <div class="modal-footer">
-        <button id="btn-restore-defaults" class="btn" style="background:transparent; border:none; color:var(--text-muted);">Restore 12 Defaults</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="btn-add-habit" class="btn"><i data-lucide="plus" style="width:14px;height:14px;"></i> Add habit</button>
+          <button id="btn-restore-defaults" class="btn" style="background:transparent;">Restore defaults</button>
+          <button id="btn-clear-history" class="btn btn-danger">Clear all history</button>
+        </div>
         <button id="btn-close-modal" class="btn btn-primary">Done</button>
       </div>
     </div>
   </div>
 
   <script>
+    // Same storage keys as the original version, so entries you already logged are kept.
     const STORAGE_KEY = 'daily_protocol_habits_preview_v1';
     const HABITS_DEF_KEY = 'daily_protocol_defs_preview_v1';
+    const MISS_THRESHOLD = 2; // consecutive missed days before the warning appears
 
     const DEFAULT_HABITS = [
-      { id: 'walk_20', label: 'Walk 20 mins', category: 'Movement & Training', badge: '20 MIN' },
-      { id: 'workout_30', label: 'Workout 30 mins', category: 'Movement & Training', badge: '30 MIN' },
-      { id: 'mobility', label: 'Mobility', category: 'Movement & Training', badge: 'RECOVERY' },
-      { id: 'forearms_5', label: '5 mins forearms', category: 'Movement & Training', badge: '5 MIN' },
-      { id: 'im8', label: 'IM8', category: 'Supplements & Stack', badge: 'DAILY' },
-      { id: 'tudca', label: 'Tudca', category: 'Supplements & Stack', badge: 'LIVER' },
-      { id: 'magnesium', label: 'Magnesium', category: 'Supplements & Stack', badge: 'MINERAL' },
-      { id: 'perfect_aminos', label: 'Perfect aminos', category: 'Supplements & Stack', badge: 'EAA' },
-      { id: 'rho_stack', label: 'Rho stack', category: 'Supplements & Stack', badge: 'STACK' },
-      { id: 'breakfast', label: 'Breakfast', category: 'Nutrition', badge: 'MEAL 1' },
-      { id: 'lunch', label: 'Lunch', category: 'Nutrition', badge: 'MEAL 2' },
-      { id: 'dinner', label: 'Dinner', category: 'Nutrition', badge: 'MEAL 3' }
+      { id: 'walk_20', label: 'Walk 20 mins', category: 'Movement & training', badge: '20 min' },
+      { id: 'workout_30', label: 'Workout 30 mins', category: 'Movement & training', badge: '30 min' },
+      { id: 'mobility', label: 'Mobility', category: 'Movement & training', badge: 'Recovery' },
+      { id: 'forearms_5', label: '5 mins forearms', category: 'Movement & training', badge: '5 min' },
+      { id: 'im8', label: 'IM8', category: 'Supplements & stack', badge: 'Daily' },
+      { id: 'tudca', label: 'Tudca', category: 'Supplements & stack', badge: 'Liver' },
+      { id: 'magnesium', label: 'Magnesium', category: 'Supplements & stack', badge: 'Mineral' },
+      { id: 'perfect_aminos', label: 'Perfect aminos', category: 'Supplements & stack', badge: 'EAA' },
+      { id: 'rho_stack', label: 'Rho stack', category: 'Supplements & stack', badge: 'Stack' },
+      { id: 'breakfast', label: 'Breakfast', category: 'Nutrition', badge: 'Meal 1' },
+      { id: 'lunch', label: 'Lunch', category: 'Nutrition', badge: 'Meal 2' },
+      { id: 'dinner', label: 'Dinner', category: 'Nutrition', badge: 'Meal 3' }
     ];
+    // Older saved habits used title-case category names; map them to the current ones.
+    const LEGACY_CATEGORY = { 'Movement & Training': 'Movement & training', 'Supplements & Stack': 'Supplements & stack' };
+    const CAT_ICONS = { 'Movement & training': 'flame', 'Supplements & stack': 'pill', 'Nutrition': 'utensils' };
+    const CAT_COLORS = ['#10b981', '#06b6d4', '#f59e0b', '#a78bfa', '#f472b6', '#60a5fa'];
 
     let HABITS = [];
     let cachedLogs = {};
     let selectedDate = '';
+    let calMonth = '';          // 'YYYY-MM'
+    let lastToday = '';
     let trendChartInstance = null;
 
-    function getTodayISO() {
-      const now = new Date();
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    }
-
-    function shiftDateISO(isoStr, delta) {
-      const [y, m, d] = isoStr.split('-').map(Number);
-      const dt = new Date(y, m - 1, d + delta);
+    // ---------- Dates ----------
+    function toISO(dt) {
       return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
     }
+    function getTodayISO() { return toISO(new Date()); }
+    function shiftDateISO(iso, delta) {
+      const [y, m, d] = iso.split('-').map(Number);
+      return toISO(new Date(y, m - 1, d + delta));
+    }
+    function prettyDate(iso) {
+      const [y, m, d] = iso.split('-').map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
 
+    // ---------- Storage ----------
     function loadHabits() {
       try {
         const raw = localStorage.getItem(HABITS_DEF_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.filter(h => h && h.id && h.label).map(h => ({
+              ...h, category: LEGACY_CATEGORY[h.category] || h.category || 'Other', badge: h.badge || ''
+            }));
+          }
         }
       } catch (e) {}
       return JSON.parse(JSON.stringify(DEFAULT_HABITS));
     }
-
     function saveHabits(habits) {
       HABITS = habits;
-      try {
-        localStorage.setItem(HABITS_DEF_KEY, JSON.stringify(habits));
-      } catch (e) {}
+      try { localStorage.setItem(HABITS_DEF_KEY, JSON.stringify(habits)); }
+      catch (e) { showToast('Could not save. Browser storage may be full or blocked.', true); }
     }
-
-    function seedRealisticDemoData(silent = false) {
-      const today = getTodayISO();
-      const logs = {};
-
-      // Populate 13 days of realistic execution, leaving '5 mins forearms' missed on the previous 2 days to demonstrate the Protocol Breach Warning
-      for (let i = 13; i >= 1; i--) {
-        const d = shiftDateISO(today, -i);
-        const rec = {};
-        DEFAULT_HABITS.forEach((h, idx) => {
-          if (i <= 2 && h.id === 'forearms_5') {
-            rec[h.id] = false;
-          } else if ((i === 9 || i === 5) && idx % 4 === 0) {
-            rec[h.id] = false;
-          } else {
-            rec[h.id] = true;
-          }
-        });
-        logs[d] = rec;
-      }
-
-      // Today starts with 7 of 12 items logged
-      const todayRec = {};
-      DEFAULT_HABITS.forEach((h, idx) => {
-        todayRec[h.id] = idx < 7 && h.id !== 'forearms_5';
-      });
-      logs[today] = todayRec;
-
-      saveLogs(logs);
-      selectedDate = today;
-      renderAll();
-      if (!silent) showToast('Demo 14-day history loaded!');
-    }
-
     function loadLogs() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && Object.keys(parsed).length > 0) return parsed;
-        }
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
       } catch (e) {}
-      return null;
+      return {};
     }
-
     function saveLogs(logs) {
       cachedLogs = logs;
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-      } catch (e) {}
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(logs)); }
+      catch (e) { showToast('Could not save. Browser storage may be full or blocked.', true); }
     }
 
-    function showToast(msg) {
+    function showToast(msg, isError) {
       const c = document.getElementById('toast-container');
       const t = document.createElement('div');
-      t.className = 'toast';
-      t.innerHTML = `<i data-lucide="check-circle" style="width:16px;height:16px;"></i> <span>${msg}</span>`;
+      t.className = 'toast' + (isError ? ' error' : '');
+      t.innerHTML = `<i data-lucide="${isError ? 'alert-circle' : 'check-circle'}" style="width:16px;height:16px;"></i> <span>${esc(msg)}</span>`;
       c.appendChild(t);
       if (window.lucide) lucide.createIcons();
-      setTimeout(() => t.remove(), 2800);
+      setTimeout(() => t.remove(), isError ? 5000 : 2800);
+    }
+
+    // ---------- Derived data ----------
+    function dayCount(iso) {
+      const rec = cachedLogs[iso] || {};
+      return HABITS.filter(h => rec[h.id]).length;
+    }
+    // First date with any real entry. Days before this are never treated as "missed".
+    function firstLogDate() {
+      let first = null;
+      for (const d of Object.keys(cachedLogs)) {
+        if (Object.values(cachedLogs[d] || {}).some(Boolean) && (first === null || d < first)) first = d;
+      }
+      return first;
+    }
+    // A habit is only judged from the day it was created (or first logged), so new habits don't start "in breach".
+    function habitStart(h) { return h.start || firstLogDate() || getTodayISO(); }
+
+    // Consecutive missed days ending yesterday. Today is excluded because it isn't over yet.
+    // A day with no entry at all counts as missed.
+    function missedStreak(h) {
+      const today = getTodayISO();
+      const start = habitStart(h);
+      let n = 0;
+      for (let i = 1; ; i++) {
+        const d = shiftDateISO(today, -i);
+        if (d < start) break;
+        if ((cachedLogs[d] || {})[h.id]) break;
+        n++;
+      }
+      return n;
+    }
+
+    // ---------- Rendering ----------
+    function setSelected(iso) {
+      const today = getTodayISO();
+      selectedDate = iso > today ? today : iso;
+      calMonth = selectedDate.slice(0, 7);
+      renderAll();
     }
 
     function renderAll() {
-      if (!selectedDate) selectedDate = getTodayISO();
+      const today = getTodayISO();
+      lastToday = today;
+      if (!selectedDate) { selectedDate = today; calMonth = today.slice(0, 7); }
 
-      document.getElementById('date-picker').value = selectedDate;
+      const picker = document.getElementById('date-picker');
+      picker.value = selectedDate;
+      picker.max = today;
+      document.getElementById('btn-next-day').disabled = selectedDate >= today;
+
+      const note = document.getElementById('past-note');
+      if (selectedDate !== today) {
+        note.textContent = `You are editing ${prettyDate(selectedDate)}. Changes are saved to that day.`;
+        note.classList.remove('hidden');
+      } else note.classList.add('hidden');
+
       const dayLogs = cachedLogs[selectedDate] || {};
+      const streaks = {};
+      HABITS.forEach(h => { streaks[h.id] = missedStreak(h); });
 
       const container = document.getElementById('habit-checklist-container');
       container.innerHTML = '';
-
-      const categories = ['Movement & Training', 'Supplements & Stack', 'Nutrition'];
-      const catIcons = {
-        'Movement & Training': 'flame',
-        'Supplements & Stack': 'pill',
-        'Nutrition': 'utensils'
-      };
-      const catColors = {
-        'Movement & Training': '#10b981',
-        'Supplements & Stack': '#06b6d4',
-        'Nutrition': '#f59e0b'
-      };
-
+      const categories = [...new Set(HABITS.map(h => h.category))];
       let totalDone = 0;
-      const totalCount = HABITS.length;
 
-      categories.forEach(cat => {
+      categories.forEach((cat, ci) => {
         const catHabits = HABITS.filter(h => h.category === cat);
-        if (catHabits.length === 0) return;
-
-        const doneInCat = catHabits.filter(h => !!dayLogs[h.id]).length;
-        const slug = cat.toLowerCase().replace(/[^a-z0-9]/g, '');
-
+        const doneInCat = catHabits.filter(h => dayLogs[h.id]).length;
         const section = document.createElement('div');
         section.className = 'category-section';
         section.innerHTML = `
           <div class="category-header">
             <div class="category-title-left">
-              <i data-lucide="${catIcons[cat]}" style="width:15px;height:15px;color:${catColors[cat]};"></i>
-              <span>${cat}</span>
+              <i data-lucide="${CAT_ICONS[cat] || 'list-checks'}" style="width:15px;height:15px;color:${CAT_COLORS[ci % CAT_COLORS.length]};"></i>
+              <span>${esc(cat)}</span>
             </div>
             <span class="mono" style="font-size:11px; color:var(--text-muted);">${doneInCat}/${catHabits.length}</span>
           </div>
-          <div class="habits-grid" id="cat-grid-${slug}"></div>
-        `;
+          <div class="habits-grid"></div>`;
         container.appendChild(section);
+        const grid = section.querySelector('.habits-grid');
 
-        const grid = section.querySelector(`#cat-grid-${slug}`);
         catHabits.forEach(h => {
           const isChecked = !!dayLogs[h.id];
           if (isChecked) totalDone++;
-
+          const missing = selectedDate === today && !isChecked && streaks[h.id] >= MISS_THRESHOLD;
+          const badge = missing ? `${streaks[h.id]}d missed` : h.badge;
           const btn = document.createElement('button');
           btn.type = 'button';
-          btn.className = `habit-btn ${isChecked ? 'checked' : ''}`;
+          btn.className = 'habit-btn' + (isChecked ? ' checked' : '') + (missing ? ' missing' : '');
+          btn.setAttribute('aria-pressed', isChecked);
           btn.innerHTML = `
             <div class="habit-info">
-              <div class="checkbox-box">
-                <i data-lucide="check" style="width:14px;height:14px;stroke-width:3;"></i>
-              </div>
-              <span class="habit-label">${h.label}</span>
+              <div class="checkbox-box"><i data-lucide="check" style="width:14px;height:14px;stroke-width:3;"></i></div>
+              <span class="habit-label">${esc(h.label)}</span>
             </div>
-            <span class="habit-badge">${h.badge}</span>
-          `;
+            ${badge ? `<span class="habit-badge">${esc(badge)}</span>` : ''}`;
           btn.addEventListener('click', () => {
             if (!cachedLogs[selectedDate]) cachedLogs[selectedDate] = {};
-            cachedLogs[selectedDate][h.id] = !isChecked;
+            cachedLogs[selectedDate][h.id] = !cachedLogs[selectedDate][h.id];
             saveLogs(cachedLogs);
             renderAll();
           });
@@ -643,267 +508,293 @@
         });
       });
 
-      const pct = totalCount > 0 ? Math.round((totalDone / totalCount) * 100) : 0;
-      const circumference = 2 * Math.PI * 35;
-      const offset = circumference - (pct / 100) * circumference;
+      if (HABITS.length === 0) {
+        container.innerHTML = '<div class="card hint" style="font-size:13px;">No habits yet. Use Customize to add some.</div>';
+      }
 
-      document.getElementById('daily-progress-ring').style.strokeDashoffset = offset;
+      const totalCount = HABITS.length;
+      const pct = totalCount ? Math.round((totalDone / totalCount) * 100) : 0;
+      const circ = 2 * Math.PI * 35;
+      document.getElementById('daily-progress-ring').style.strokeDashoffset = circ - (pct / 100) * circ;
       document.getElementById('daily-pct-text').textContent = `${pct}%`;
       document.getElementById('daily-fraction-text').innerHTML = `${totalDone} <span style="font-size:13px; font-weight:normal; color:var(--text-muted);">/ ${totalCount}</span>`;
       document.getElementById('daily-progress-bar').style.width = `${pct}%`;
+      document.getElementById('score-date-label').textContent = selectedDate === today ? 'Today' : prettyDate(selectedDate);
 
-      const gradeBadge = document.getElementById('daily-grade-badge');
-      if (pct === 100) {
-        gradeBadge.textContent = 'PERFECT';
-        gradeBadge.style.background = 'rgba(16, 185, 129, 0.2)';
-        gradeBadge.style.color = '#34d399';
-      } else if (pct >= 75) {
-        gradeBadge.textContent = 'STRONG';
-        gradeBadge.style.background = 'rgba(6, 182, 212, 0.2)';
-        gradeBadge.style.color = '#22d3ee';
-      } else if (pct > 0) {
-        gradeBadge.textContent = 'IN PROGRESS';
-        gradeBadge.style.background = 'rgba(245, 158, 11, 0.2)';
-        gradeBadge.style.color = '#fbbf24';
-      } else {
-        gradeBadge.textContent = 'PENDING';
-        gradeBadge.style.background = '#1e293b';
-        gradeBadge.style.color = 'var(--text-muted)';
-      }
+      const gb = document.getElementById('daily-grade-badge');
+      const grades = pct === 100 ? ['Perfect', 'rgba(16,185,129,.2)', '#34d399']
+        : pct >= 75 ? ['Strong', 'rgba(6,182,212,.2)', '#22d3ee']
+        : pct > 0 ? ['In progress', 'rgba(245,158,11,.2)', '#fbbf24']
+        : ['Pending', '#1e293b', '#94a3b8'];
+      gb.textContent = grades[0]; gb.style.background = grades[1]; gb.style.color = grades[2];
 
-      checkConsecutiveMisses();
+      renderMissAlert(streaks);
       renderMatrix();
+      renderCalendar();
+      renderStats();
       renderTrendChart();
       if (window.lucide) lucide.createIcons();
     }
 
-    function checkConsecutiveMisses() {
+    function renderMissAlert(streaks) {
       const banner = document.getElementById('miss-alert-banner');
-      const textEl = document.getElementById('miss-alert-text');
+      const list = document.getElementById('miss-alert-list');
+      const flagged = HABITS.filter(h => streaks[h.id] >= MISS_THRESHOLD)
+        .sort((a, b) => streaks[b.id] - streaks[a.id]);
+      if (!flagged.length) { banner.classList.add('hidden'); return; }
+      document.getElementById('miss-alert-title').textContent =
+        `${flagged.length} habit${flagged.length > 1 ? 's' : ''} missed ${MISS_THRESHOLD}+ days in a row`;
+      list.innerHTML = flagged.map(h =>
+        `<li><strong>${esc(h.label)}</strong>: ${streaks[h.id]} days (last missed back to ${prettyDate(shiftDateISO(getTodayISO(), -streaks[h.id]))})</li>`
+      ).join('');
+      banner.classList.remove('hidden');
+    }
+
+    function levelClass(iso, count) {
       const today = getTodayISO();
-
-      const missedNames = [];
-      HABITS.forEach(h => {
-        let streak = 0;
-        for (let i = 1; i <= 2; i++) {
-          const d = shiftDateISO(today, -i);
-          const rec = cachedLogs[d] || {};
-          if (!rec[h.id]) streak++;
-        }
-        if (streak >= 2) missedNames.push(h.label);
-      });
-
-      if (missedNames.length > 0) {
-        banner.classList.remove('hidden');
-        textEl.textContent = `You missed ${missedNames.join(', ')} for 2 consecutive days. Get back on protocol!`;
-      } else {
-        banner.classList.add('hidden');
-      }
+      const first = firstLogDate();
+      const pct = HABITS.length ? (count / HABITS.length) * 100 : 0;
+      if (iso > today) return 'future';
+      if (count === 0 && first && iso >= first && iso < today) return 'lvl-0 missed';
+      if (pct === 100) return 'lvl-3';
+      if (pct >= 70) return 'lvl-2';
+      if (pct > 0) return 'lvl-1';
+      return 'lvl-0';
     }
 
     function renderMatrix() {
       const grid = document.getElementById('consistency-matrix-grid');
       grid.innerHTML = '';
       const today = getTodayISO();
-
       for (let i = 13; i >= 0; i--) {
         const d = shiftDateISO(today, -i);
-        const rec = cachedLogs[d] || {};
-        const count = HABITS.filter(h => rec[h.id]).length;
-        const pct = HABITS.length > 0 ? (count / HABITS.length) * 100 : 0;
-
-        let lvl = 'lvl-0';
-        if (pct === 100) lvl = 'lvl-3';
-        else if (pct >= 70) lvl = 'lvl-2';
-        else if (pct > 0) lvl = 'lvl-1';
-
+        const count = dayCount(d);
         const [, m, day] = d.split('-');
-        const cell = document.createElement('div');
-        cell.className = `matrix-cell ${lvl} ${d === selectedDate ? 'active-day' : ''}`;
-        cell.title = `${d}: ${count}/${HABITS.length} completed`;
-        cell.innerHTML = `
-          <span class="matrix-date">${m}/${day}</span>
-          <span class="matrix-count">${count}</span>
-        `;
-        cell.addEventListener('click', () => {
-          selectedDate = d;
-          renderAll();
-        });
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = `matrix-cell ${levelClass(d, count)} ${d === selectedDate ? 'active-day' : ''} ${d === today ? 'today' : ''}`;
+        cell.title = `${prettyDate(d)}: ${count}/${HABITS.length} completed`;
+        cell.innerHTML = `<span class="matrix-date">${m}/${day}</span><span class="matrix-count">${count}</span>`;
+        cell.addEventListener('click', () => setSelected(d));
         grid.appendChild(cell);
       }
+    }
+
+    function renderCalendar() {
+      const [y, m] = calMonth.split('-').map(Number);
+      const today = getTodayISO();
+      document.getElementById('cal-title').textContent =
+        new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      document.getElementById('cal-next').disabled = calMonth >= today.slice(0, 7);
+
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+      const offset = (new Date(y, m - 1, 1).getDay() + 6) % 7; // Monday first
+      for (let i = 0; i < offset; i++) grid.appendChild(Object.assign(document.createElement('div'), { className: 'cal-empty' }));
+      const days = new Date(y, m, 0).getDate();
+      for (let day = 1; day <= days; day++) {
+        const d = `${calMonth}-${String(day).padStart(2, '0')}`;
+        const count = dayCount(d);
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = `matrix-cell cal-cell ${levelClass(d, count)} ${d === selectedDate ? 'active-day' : ''} ${d === today ? 'today' : ''}`;
+        cell.title = `${prettyDate(d)}: ${count}/${HABITS.length} completed`;
+        cell.textContent = day;
+        if (d <= today) cell.addEventListener('click', () => setSelected(d));
+        grid.appendChild(cell);
+      }
+    }
+
+    function renderStats() {
+      const today = getTodayISO();
+      const first = firstLogDate();
+      const grid = document.getElementById('stats-grid');
+      document.getElementById('stats-since').textContent = first ? `Since ${first}` : '';
+      if (!first || !HABITS.length) {
+        grid.innerHTML = '<div class="hint" style="grid-column:1/-1; font-size:12px;">Log your first day to see stats.</div>';
+        return;
+      }
+      let days = 0, perfect = 0, sum = 0;
+      for (let d = first; d <= today; d = shiftDateISO(d, 1)) {
+        const c = dayCount(d);
+        days++; sum += c / HABITS.length;
+        if (c === HABITS.length) perfect++;
+      }
+      // Streak of days with at least one habit done; today doesn't break it while still in progress.
+      let streak = 0;
+      let d = dayCount(today) > 0 ? today : shiftDateISO(today, -1);
+      while (d >= first && dayCount(d) > 0) { streak++; d = shiftDateISO(d, -1); }
+      const stat = (label, val) => `<div class="stat"><span class="field-label">${label}</span><b class="mono">${val}</b></div>`;
+      grid.innerHTML = stat('Days tracked', days) + stat('Perfect days', perfect)
+        + stat('Average completion', Math.round((sum / days) * 100) + '%') + stat('Current streak', streak + 'd');
     }
 
     function renderTrendChart() {
       const canvas = document.getElementById('habitTrendChart');
       if (!canvas || typeof Chart === 'undefined') return;
-
-      const ctx = canvas.getContext('2d');
-      const labels = [];
-      const data = [];
+      const labels = [], data = [];
       const today = getTodayISO();
-
       for (let i = 13; i >= 0; i--) {
         const d = shiftDateISO(today, -i);
         const [, m, day] = d.split('-');
         labels.push(`${m}/${day}`);
-        const rec = cachedLogs[d] || {};
-        const count = HABITS.filter(h => rec[h.id]).length;
-        const pct = HABITS.length > 0 ? Math.round((count / HABITS.length) * 100) : 0;
-        data.push(pct);
+        data.push(HABITS.length ? Math.round((dayCount(d) / HABITS.length) * 100) : 0);
       }
-
       if (trendChartInstance) trendChartInstance.destroy();
-
-      trendChartInstance = new Chart(ctx, {
+      trendChartInstance = new Chart(canvas.getContext('2d'), {
         type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: data,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.16)',
-            borderWidth: 2.5,
-            tension: 0.32,
-            fill: true,
-            pointRadius: 3.5,
-            pointBackgroundColor: '#10b981',
-            pointBorderColor: '#070a12',
-            pointBorderWidth: 1.5
-          }]
-        },
+        data: { labels, datasets: [{
+          data, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.16)', borderWidth: 2.5, tension: 0.32, fill: true,
+          pointRadius: 3.5, pointBackgroundColor: '#10b981', pointBorderColor: '#070a12', pointBorderWidth: 1.5
+        }] },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
+          responsive: true, maintainAspectRatio: false, animation: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: {
-              grid: { color: 'rgba(255,255,255,0.03)' },
-              ticks: { color: '#64748b', font: { size: 9, family: 'JetBrains Mono' } }
-            },
-            y: {
-              min: 0,
-              max: 100,
-              grid: { color: 'rgba(255,255,255,0.03)' },
-              ticks: { color: '#64748b', font: { size: 9, family: 'JetBrains Mono' } }
-            }
+            x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', font: { size: 9, family: 'JetBrains Mono' } } },
+            y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', font: { size: 9, family: 'JetBrains Mono' } } }
           }
         }
       });
     }
 
-    // Event Bindings
-    document.getElementById('date-picker').addEventListener('change', (e) => {
-      if (e.target.value) {
-        selectedDate = e.target.value;
-        renderAll();
-      }
-    });
-
-    document.getElementById('btn-prev-day').addEventListener('click', () => {
-      selectedDate = shiftDateISO(selectedDate, -1);
-      renderAll();
-    });
-
-    document.getElementById('btn-next-day').addEventListener('click', () => {
-      selectedDate = shiftDateISO(selectedDate, 1);
-      renderAll();
-    });
-
-    document.getElementById('btn-today').addEventListener('click', () => {
-      selectedDate = getTodayISO();
-      renderAll();
-    });
-
-    document.getElementById('btn-mark-all').addEventListener('click', () => {
-      if (!cachedLogs[selectedDate]) cachedLogs[selectedDate] = {};
-      HABITS.forEach(h => cachedLogs[selectedDate][h.id] = true);
-      saveLogs(cachedLogs);
-      renderAll();
-      showToast('All 12 items completed for this date!');
-    });
-
-    document.getElementById('btn-reset-demo').addEventListener('click', () => {
-      seedRealisticDemoData(false);
-    });
-
-    document.getElementById('btn-edit-habits').addEventListener('click', () => {
-      const listEl = document.getElementById('habit-editor-list');
-      listEl.innerHTML = '';
+    // ---------- Habit editor ----------
+    function renderEditor() {
+      const list = document.getElementById('habit-editor-list');
+      list.innerHTML = '';
+      document.getElementById('category-options').innerHTML =
+        [...new Set(HABITS.map(h => h.category))].map(c => `<option value="${esc(c)}">`).join('');
       HABITS.forEach((h, idx) => {
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex; gap:8px; align-items:center; background:var(--bg-base); padding:10px; border-radius:10px; border:1px solid var(--border-color);';
+        row.className = 'editor-row';
         row.innerHTML = `
-          <input type="text" value="${h.label}" id="edit-habit-${idx}" style="flex-grow:1; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:7px 10px; color:#fff; font-size:12px; outline:none;">
-          <button type="button" onclick="updateHabitLabel(${idx})" class="btn btn-primary" style="padding:7px 12px;">Save</button>
-        `;
-        listEl.appendChild(row);
+          <input type="text" value="${esc(h.label)}" placeholder="Habit name" aria-label="Habit name" data-f="label">
+          <input type="text" value="${esc(h.category)}" placeholder="Category" list="category-options" aria-label="Category" data-f="category">
+          <input type="text" value="${esc(h.badge || '')}" placeholder="Tag" aria-label="Tag" data-f="badge">
+          <button type="button" class="btn btn-danger" style="padding:7px 10px;" aria-label="Remove habit"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>`;
+        row.querySelectorAll('input').forEach(inp => inp.addEventListener('change', () => {
+          const f = inp.dataset.f;
+          const v = inp.value.trim();
+          if (f !== 'badge' && !v) { inp.value = HABITS[idx][f]; return; }
+          const next = HABITS.map(x => ({ ...x }));
+          next[idx][f] = v;
+          saveHabits(next);
+          renderAll();
+          if (f === 'category') renderEditor();
+        }));
+        row.querySelector('button').addEventListener('click', () => {
+          if (!confirm(`Remove "${h.label}"? Past entries stay in your saved data but won't be shown.`)) return;
+          saveHabits(HABITS.filter((_, i) => i !== idx));
+          renderAll(); renderEditor();
+        });
+        list.appendChild(row);
       });
+      if (window.lucide) lucide.createIcons();
+    }
+
+    document.getElementById('btn-edit-habits').addEventListener('click', () => {
+      renderEditor();
       document.getElementById('habit-editor-modal').classList.add('active');
     });
+    const closeEditor = () => document.getElementById('habit-editor-modal').classList.remove('active');
+    document.getElementById('close-habit-editor').addEventListener('click', closeEditor);
+    document.getElementById('btn-close-modal').addEventListener('click', closeEditor);
+    document.getElementById('habit-editor-modal').addEventListener('click', e => { if (e.target.id === 'habit-editor-modal') closeEditor(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEditor(); });
 
-    window.updateHabitLabel = function(idx) {
-      const val = document.getElementById(`edit-habit-${idx}`).value.trim();
-      if (val) {
-        HABITS[idx].label = val;
-        saveHabits(HABITS);
-        renderAll();
-        showToast('Habit updated!');
-      }
-    };
-
-    document.getElementById('close-habit-editor').addEventListener('click', () => {
-      document.getElementById('habit-editor-modal').classList.remove('active');
+    document.getElementById('btn-add-habit').addEventListener('click', () => {
+      const cat = HABITS.length ? HABITS[HABITS.length - 1].category : 'Other';
+      saveHabits([...HABITS, { id: 'h_' + Date.now().toString(36), label: 'New habit', category: cat, badge: '', start: getTodayISO() }]);
+      renderAll(); renderEditor();
+      const inputs = document.querySelectorAll('#habit-editor-list input[data-f="label"]');
+      const last = inputs[inputs.length - 1];
+      if (last) { last.focus(); last.select(); last.scrollIntoView({ block: 'nearest' }); }
     });
-
-    document.getElementById('btn-close-modal').addEventListener('click', () => {
-      document.getElementById('habit-editor-modal').classList.remove('active');
-    });
-
     document.getElementById('btn-restore-defaults').addEventListener('click', () => {
+      if (!confirm('Replace your habit list with the 12 defaults? Your history is not deleted.')) return;
       saveHabits(JSON.parse(JSON.stringify(DEFAULT_HABITS)));
+      renderAll(); renderEditor();
+      showToast('Default habits restored');
+    });
+    document.getElementById('btn-clear-history').addEventListener('click', () => {
+      if (!confirm('Delete ALL logged history? This cannot be undone. Export a backup first if unsure.')) return;
+      if (!confirm('Really delete everything? Last chance.')) return;
+      saveLogs({});
       renderAll();
-      showToast('Restored 12 default habits!');
+      showToast('History cleared');
     });
 
+    // ---------- Navigation and actions ----------
+    document.getElementById('date-picker').addEventListener('change', e => { if (e.target.value) setSelected(e.target.value); });
+    document.getElementById('btn-prev-day').addEventListener('click', () => setSelected(shiftDateISO(selectedDate, -1)));
+    document.getElementById('btn-next-day').addEventListener('click', () => setSelected(shiftDateISO(selectedDate, 1)));
+    document.getElementById('btn-today').addEventListener('click', () => setSelected(getTodayISO()));
+    document.getElementById('cal-prev').addEventListener('click', () => {
+      const [y, m] = calMonth.split('-').map(Number);
+      calMonth = toISO(new Date(y, m - 2, 1)).slice(0, 7); renderCalendar(); if (window.lucide) lucide.createIcons();
+    });
+    document.getElementById('cal-next').addEventListener('click', () => {
+      const [y, m] = calMonth.split('-').map(Number);
+      calMonth = toISO(new Date(y, m, 1)).slice(0, 7); renderCalendar(); if (window.lucide) lucide.createIcons();
+    });
+    document.getElementById('btn-mark-all').addEventListener('click', () => {
+      if (!HABITS.length) return;
+      if (!cachedLogs[selectedDate]) cachedLogs[selectedDate] = {};
+      HABITS.forEach(h => { cachedLogs[selectedDate][h.id] = true; });
+      saveLogs(cachedLogs);
+      renderAll();
+      showToast(`All ${HABITS.length} items completed`);
+    });
+
+    // ---------- Backup ----------
     document.getElementById('btn-export').addEventListener('click', () => {
-      const data = { habits: HABITS, logs: cachedLogs };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
+      const data = { version: 2, exportedAt: new Date().toISOString(), habits: HABITS, logs: cachedLogs };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `daily-protocol-backup-${getTodayISO()}.json`;
+      a.href = url; a.download = `daily-protocol-backup-${getTodayISO()}.json`;
       a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('Backup downloaded');
     });
-
-    document.getElementById('input-import').addEventListener('change', (e) => {
+    document.getElementById('input-import').addEventListener('change', e => {
       const file = e.target.files[0];
+      e.target.value = '';
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (evt) => {
+      reader.onload = evt => {
         try {
-          const parsed = JSON.parse(evt.target.result);
-          if (parsed.logs) saveLogs(parsed.logs);
-          if (parsed.habits) saveHabits(parsed.habits);
+          const p = JSON.parse(evt.target.result);
+          const okLogs = p && p.logs && typeof p.logs === 'object' && !Array.isArray(p.logs);
+          const okHabits = !p.habits || (Array.isArray(p.habits) && p.habits.every(h => h && h.id && h.label));
+          if (!okLogs || !okHabits) throw new Error('bad shape');
+          if (!confirm(`Import ${Object.keys(p.logs).length} days of history? This replaces your current data.`)) return;
+          saveLogs(p.logs);
+          if (p.habits && p.habits.length) saveHabits(p.habits.map(h => ({ ...h, category: LEGACY_CATEGORY[h.category] || h.category || 'Other' })));
           renderAll();
-          showToast('Data imported successfully!');
-        } catch (err) {
-          showToast('Invalid backup file.');
-        }
+          showToast('Data imported');
+        } catch (err) { showToast('That file is not a valid backup.', true); }
       };
       reader.readAsText(file);
     });
 
+    // ---------- Startup ----------
+    function checkRollover() {
+      const today = getTodayISO();
+      if (today !== lastToday) {
+        if (selectedDate === lastToday) selectedDate = today;
+        calMonth = selectedDate.slice(0, 7);
+        renderAll();
+      }
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkRollover(); });
+    setInterval(checkRollover, 60000);
+
     window.addEventListener('DOMContentLoaded', () => {
       HABITS = loadHabits();
-      const existingLogs = loadLogs();
-      selectedDate = getTodayISO();
-
-      if (existingLogs) {
-        cachedLogs = existingLogs;
-        renderAll();
-      } else {
-        seedRealisticDemoData(true);
-      }
+      cachedLogs = loadLogs();
+      // Ask the browser not to evict saved history under storage pressure.
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+      setSelected(getTodayISO());
     });
   </script>
 </body>
